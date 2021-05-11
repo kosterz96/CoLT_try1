@@ -3,6 +3,7 @@
 ThisBuild / scalaVersion     := "2.12.13"
 ThisBuild / version          := "0.1.0"
 ThisBuild / organization     := "com.github.kosterz96"
+//mainClass := Some("CoLT_FA")
 
 lazy val root = (project in file("."))
   .settings(

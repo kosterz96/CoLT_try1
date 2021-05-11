@@ -20,33 +20,44 @@ import chisel3.experimental.BundleLiterals._
   */
 class GCDSpec extends FreeSpec with ChiselScalatestTester {
 
-  "Gcd should calculate proper greatest common denominator" in {
-    test(new DecoupledGcd(16)) { dut =>
-      dut.input.initSource()
-      dut.input.setSourceClock(dut.clock)
-      dut.output.initSink()
-      dut.output.setSinkClock(dut.clock)
-
-      val testValues = for { x <- 0 to 10; y <- 0 to 10} yield (x, y)
-      val inputSeq = testValues.map { case (x, y) => (new GcdInputBundle(16)).Lit(_.value1 -> x.U, _.value2 -> y.U) }
-      val resultSeq = testValues.map { case (x, y) =>
-        (new GcdOutputBundle(16)).Lit(_.value1 -> x.U, _.value2 -> y.U, _.gcd -> BigInt(x).gcd(BigInt(y)).U)
-      }
-
-      fork {
-        // push inputs into the calculator, stall for 11 cycles one third of the way
-        val (seq1, seq2) = inputSeq.splitAt(resultSeq.length / 3)
-        dut.input.enqueueSeq(seq1)
-        dut.clock.step(11)
-        dut.input.enqueueSeq(seq2)
-      }.fork {
-        // retrieve computations from the calculator, stall for 10 cycles one half of the way
-        val (seq1, seq2) = resultSeq.splitAt(resultSeq.length / 2)
-        dut.output.expectDequeueSeq(seq1)
-        dut.clock.step(10)
-        dut.output.expectDequeueSeq(seq2)
-      }.join()
-
-    }
-  }
+  test(new CoLT_FA()) { c => 
+/*
+    // Read non-existent entry
+    c.io.readEnable.poke(true.B)
+    c.io.readAddress.poke(76.U)
+    c.clock.step(2)
+    c.io.validData.expect(false.B)
+    c.io.retAddress.expect (0.U)
+    
+    
+    // Write address 12 address at 3
+    c.io.readEnable.poke(false.B)
+    c.io.writeEnable.poke(true.B)
+    c.io.writeAddress.poke(12.U)
+    c.io.writeData.poke(3.U)
+    c.clock.step(2)
+    c.io.retAddress.expect (0.U)
+    */
+    
+    // Read non-existent entry
+    c.io.readEnable.poke(true.B)
+    c.io.readAddress.poke(37.U)
+    c.clock.step(3)
+    c.io.retAddress.expect(3.U)
+    c.io.validData.expect(true.B)
+        
+    c.io.readEnable.poke(true.B)
+    c.io.readAddress.poke(91.U)
+    c.clock.step(3)
+    c.io.validData.expect(true.B)
+    c.io.retAddress.expect(1.U)
+    
+    c.io.readEnable.poke(true.B)
+    c.io.readAddress.poke(99.U)
+    c.clock.step(3)
+    c.io.validData.expect(true.B)
+    c.io.retAddress.expect(2.U)   
+    
+    println("Success!")
+}
 }
