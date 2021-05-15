@@ -7,15 +7,41 @@ import chisel3.util._
 import chisel3.testers._
 //import chisel3.testers.RawTester.test
 
-import CoLT.Parameters
+// import CoLT.Params
 
 object CoLT_FA extends App{
     //chisel3.Driver.execute(Array[String](), () => new CoLT_FA)
-    val arguments = new Array[String](5)
+    //val arguments = new Array[String](5)
     chisel3.stage.ChiselStage.elaborate(new CoLT_FA)
 }
 
-class CoLT_FA extends Module {
+class CoLT_FA () extends Module {
+    val pMemSize = 128
+    val pMemAddressWidth = log2Ceil(pMemSize)
+    val vMemSize = 256
+    val vMemAddressWidth: Int = log2Ceil(vMemSize)
+    val cacheLineSize = 4 // Number of pages to be fetched from a PTW
+    val ptSize = 128  // 2^7
+    val pageSize = 32 //bits
+    val pageOffset = log2Ceil(pageSize)
+    val dataWidth = 32
+    val tlbSize = 8
+    val coalBits = 3
+    val attrBits = 3
+    val vpn_width=vMemAddressWidth - pageOffset
+    val ppn_width=pMemAddressWidth - pageOffset
+    val tlbEntryWidth = vpn_width + coalBits + attrBits + ppn_width
+    // ========= CoLT-FA TLB entry structure =========
+    // BaseVPN [vMemAddressWidth - pageOffset] | CoalLength[coalBits] | Attributes [attrBits] | Base PPN [pMemAddressWidth - pageOffset]
+    val vpn_tlb_start        =tlbEntryWidth-1
+    val vpn_tlb_end          =vpn_tlb_start-vpn_width+1
+    val coal_length_start    =vpn_tlb_end-1
+    val coal_length_end      =coal_length_start-coalBits+1
+    val attributes_start     =coal_length_end-1
+    val attributes_end       =attributes_start-attrBits+1
+    val ppn_tlb_start        =attributes_end-1
+    val ppn_tlb_end          =ppn_tlb_start-ppn_width+1
+
     val io = IO(new Bundle {
         val readAddress = Input (UInt(vMemAddressWidth.W))  // Determines the requested VIRTUAL address
         val readEnable = Input(Bool())                      // Determines whether or not read operation is allowed
@@ -33,13 +59,11 @@ class CoLT_FA extends Module {
                                                     // and it's not just the previous return address. Check lookup.
         val retAddress = Output (UInt(ppn_width.W)) //Returns the desired PPN
     })
-
     
     val previousRetAddressReg = RegNext(io.retAddress, 0.U(ppn_width.W))
     val reqVPN=Reg(UInt(vpn_width.W))
     val resultIndexReg = Reg(UInt(log2Ceil(tlbSize).W))
     val foundReg = RegInit(false.B)
-    
     
     val pMem = SyncReadMem(pMemSize, UInt(dataWidth.W))
     //val coltEntriesRegs = RegInit(VecInit(Seq.fill(tlbSize)(0.U(tlbEntryWidth.W))))
@@ -120,10 +144,4 @@ class CoLT_FA extends Module {
     def getPPNfromPA (entry: UInt):UInt={
         entry(pMemAddressWidth-1, pMemAddressWidth-ppn_width)
     }
-
-
 }
-
-
-
-// println(getVerilog (new CoLT_FA))
