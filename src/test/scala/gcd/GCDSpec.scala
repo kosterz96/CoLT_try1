@@ -20,7 +20,7 @@ import chisel3.experimental.BundleLiterals._
   */
 class GCDSpec extends FreeSpec with ChiselScalatestTester {
 
-  test(new CoLT_FA()) { c => 
+  test(new CoLT_FA) { c => 
 /*
     // Read non-existent entry
     c.io.readEnable.poke(true.B)
