@@ -3,7 +3,7 @@ package CoLT
 import chisel3._
 import chisel3.util._
 
-class Parameters extends Bundle{
+class Params extends Bundle{
     val pMemSize = 128
     val pMemAddressWidth = log2Ceil(pMemSize)
 

@@ -2,12 +2,13 @@
 test_run_dir/*
 ### XilinxISE template
 
+
 ## My excludes based on:
 ## https://scalameta.org/metals/docs/editors/vscode.html
-.metals/
-.bloop/
-.ammonite/
-metals.sbt
+#.metals/
+#.bloop/
+#.ammonite/
+#metals.sbt
 
 # intermediate build files
 *.bgn
